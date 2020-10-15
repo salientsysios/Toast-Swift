@@ -106,9 +106,9 @@ public extension UIView {
      @param completion The completion closure, executed after the toast view disappears.
             didTap will be `true` if the toast view was dismissed from a tap.
      */
-    func makeToast(_ message: String?, duration: TimeInterval = ToastManager.shared.duration, position: ToastPosition = ToastManager.shared.position, title: String? = nil, image: UIImage? = nil, style: ToastStyle = ToastManager.shared.style, completion: ((_ didTap: Bool) -> Void)? = nil) {
+    func makeToast(_ message: String?, duration: TimeInterval = ToastManager.shared.duration, position: ToastPosition = ToastManager.shared.position, title: String? = nil, image: UIImage? = nil, rightIcon: UIImage? = nil, style: ToastStyle = ToastManager.shared.style, completion: ((_ didTap: Bool) -> Void)? = nil) {
         do {
-            let toast = try toastViewForMessage(message, title: title, image: image, style: style)
+            let toast = try toastViewForMessage(message, title: title, image: image, rightIcon: rightIcon, style: style)
             showToast(toast, duration: duration, position: position, completion: completion)
         } catch ToastError.missingParameters {
             print("Error: message, title, and image are all nil")
@@ -127,9 +127,9 @@ public extension UIView {
      @param completion The completion closure, executed after the toast view disappears.
             didTap will be `true` if the toast view was dismissed from a tap.
      */
-    func makeToast(_ message: String?, duration: TimeInterval = ToastManager.shared.duration, point: CGPoint, title: String?, image: UIImage?, style: ToastStyle = ToastManager.shared.style, completion: ((_ didTap: Bool) -> Void)?) {
+    func makeToast(_ message: String?, duration: TimeInterval = ToastManager.shared.duration, point: CGPoint, title: String?, image: UIImage?, rightIcon: UIImage? = nil, style: ToastStyle = ToastManager.shared.style, completion: ((_ didTap: Bool) -> Void)?) {
         do {
-            let toast = try toastViewForMessage(message, title: title, image: image, style: style)
+            let toast = try toastViewForMessage(message, title: title, image: image, rightIcon: rightIcon, style: style)
             showToast(toast, duration: duration, point: point, completion: completion)
         } catch ToastError.missingParameters {
             print("Error: message, title, and image cannot all be nil")
@@ -411,7 +411,7 @@ public extension UIView {
      @throws `ToastError.missingParameters` when message, title, and image are all nil
      @return The newly created toast view
     */
-    func toastViewForMessage(_ message: String?, title: String?, image: UIImage?, style: ToastStyle) throws -> UIView {
+    func toastViewForMessage(_ message: String?, title: String?, image: UIImage?, rightIcon: UIImage?, style: ToastStyle) throws -> UIView {
         // sanity
         guard message != nil || title != nil || image != nil else {
             throw ToastError.missingParameters
@@ -425,6 +425,8 @@ public extension UIView {
         wrapperView.backgroundColor = style.backgroundColor
         wrapperView.autoresizingMask = [.flexibleLeftMargin, .flexibleRightMargin, .flexibleTopMargin, .flexibleBottomMargin]
         wrapperView.layer.cornerRadius = style.cornerRadius
+        wrapperView.layer.borderColor = style.borderColor.cgColor
+        wrapperView.layer.borderWidth = style.borderWidth
         
         if style.displayShadow {
             wrapperView.layer.shadowColor = UIColor.black.cgColor
@@ -442,7 +444,12 @@ public extension UIView {
             }
 
             imageView?.contentMode = .scaleAspectFit
+            imageView?.backgroundColor = style.imageBackgroundColor
             imageView?.frame = CGRect(x: style.horizontalPadding, y: style.verticalPadding, width: style.imageSize.width, height: style.imageSize.height)
+
+            if style.imageShape == .circle {
+                imageView?.makeRounded()
+            }
         }
         
         var imageRect = CGRect.zero
@@ -452,6 +459,18 @@ public extension UIView {
             imageRect.origin.y = style.verticalPadding
             imageRect.size.width = imageView.bounds.size.width
             imageRect.size.height = imageView.bounds.size.height
+        }
+
+        // Close icon
+        var closeIconSize: CGSize = .zero
+        var imgViewClose: UIImageView?
+        if let rightIcon = rightIcon {
+            let imgView = UIImageView(image: rightIcon)
+            imgView.tintColor = .lightGray
+            imgView.frame.size = style.rightImageSize
+
+            closeIconSize = imgView.frame.size
+            imgViewClose = imgView
         }
 
         if let title = title {
@@ -464,7 +483,7 @@ public extension UIView {
             titleLabel?.backgroundColor = UIColor.clear
             titleLabel?.text = title;
             
-            let maxTitleSize = CGSize(width: (self.bounds.size.width * style.maxWidthPercentage) - imageRect.size.width, height: self.bounds.size.height * style.maxHeightPercentage)
+            let maxTitleSize = CGSize(width: (self.bounds.size.width * style.maxWidthPercentage) - imageRect.size.width - closeIconSize.width, height: self.bounds.size.height * style.maxHeightPercentage)
             let titleSize = titleLabel?.sizeThatFits(maxTitleSize)
             if let titleSize = titleSize {
                 titleLabel?.frame = CGRect(x: 0.0, y: 0.0, width: titleSize.width, height: titleSize.height)
@@ -481,7 +500,7 @@ public extension UIView {
             messageLabel?.textColor = style.messageColor
             messageLabel?.backgroundColor = UIColor.clear
             
-            let maxMessageSize = CGSize(width: (self.bounds.size.width * style.maxWidthPercentage) - imageRect.size.width, height: self.bounds.size.height * style.maxHeightPercentage)
+            let maxMessageSize = CGSize(width: (self.bounds.size.width * style.maxWidthPercentage) - imageRect.size.width - closeIconSize.width, height: self.bounds.size.height * style.maxHeightPercentage)
             let messageSize = messageLabel?.sizeThatFits(maxMessageSize)
             if let messageSize = messageSize {
                 let actualWidth = min(messageSize.width, maxMessageSize.width)
@@ -510,7 +529,7 @@ public extension UIView {
         
         let longerWidth = max(titleRect.size.width, messageRect.size.width)
         let longerX = max(titleRect.origin.x, messageRect.origin.x)
-        let wrapperWidth = max((imageRect.size.width + (style.horizontalPadding * 2.0)), (longerX + longerWidth + style.horizontalPadding))
+        let wrapperWidth = max((imageRect.size.width + (style.horizontalPadding * 2.0)), (longerX + longerWidth + style.horizontalPadding + style.imageSize.width + style.horizontalPadding))
         let wrapperHeight = max((messageRect.origin.y + messageRect.size.height + style.verticalPadding), (imageRect.size.height + (style.verticalPadding * 2.0)))
         
         wrapperView.frame = CGRect(x: 0.0, y: 0.0, width: wrapperWidth, height: wrapperHeight)
@@ -529,6 +548,11 @@ public extension UIView {
         
         if let imageView = imageView {
             wrapperView.addSubview(imageView)
+        }
+
+        if let imgViewClose = imgViewClose {
+            imgViewClose.frame.origin = CGPoint(x: wrapperView.frame.size.width - style.imageSize.width, y: style.verticalPadding)
+            wrapperView.addSubview(imgViewClose)
         }
         
         return wrapperView
@@ -556,7 +580,7 @@ public struct ToastStyle {
      The background color. Default is `.black` at 80% opacity.
     */
     public var backgroundColor: UIColor = UIColor.black.withAlphaComponent(0.8)
-    
+
     /**
      The title color. Default is `UIColor.whiteColor()`.
     */
@@ -602,12 +626,12 @@ public struct ToastStyle {
      and `safeAreaInsets.bottom`.
     */
     public var verticalPadding: CGFloat = 10.0
-    
-    /**
-     The corner radius. Default is 10.0.
-    */
+
+    // Border styles
     public var cornerRadius: CGFloat = 10.0;
-    
+    public var borderColor: UIColor = .clear
+    public var borderWidth: CGFloat = 2.0
+
     /**
      The title font. Default is `.boldSystemFont(16.0)`.
     */
@@ -668,15 +692,18 @@ public struct ToastStyle {
     */
     public var shadowOffset = CGSize(width: 4.0, height: 4.0)
     
-    /**
-     The image size. The default is 80 x 80.
-    */
+    // Left icon
     public var imageSize = CGSize(width: 80.0, height: 80.0)
-
-    /**
-     The image tintColor. The default is nil.
-    */
     public var imageTintColor: UIColor?
+    public var imageBackgroundColor: UIColor? = .white
+    public enum ImageShape {
+        case square
+        case circle
+    }
+    public var imageShape: ImageShape = .circle
+
+    // Right icon
+    public var rightImageSize = CGSize(width: 20, height: 20)
 
     /**
      The size of the toast activity view when `makeToastActivity(position:)` is called.
@@ -790,4 +817,12 @@ private extension UIView {
         }
     }
     
+}
+
+// MARK: - UIImageView Rounded
+extension UIImageView {
+    func makeRounded() {
+        layer.cornerRadius = frame.width / 2.0
+        layer.masksToBounds = true
+    }
 }
