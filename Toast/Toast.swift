@@ -427,7 +427,11 @@ public extension UIView {
         wrapperView.layer.cornerRadius = style.cornerRadius
         wrapperView.layer.borderColor = style.borderColor.cgColor
         wrapperView.layer.borderWidth = style.borderWidth
-        
+        wrapperView.isUserInteractionEnabled = true
+        wrapperView.accessibilityIdentifier = "toast-view"
+        wrapperView.accessibilityLabel = "Toast View"
+        wrapperView.accessibilityHint = "Toast View"
+
         if style.displayShadow {
             wrapperView.layer.shadowColor = UIColor.black.cgColor
             wrapperView.layer.shadowOpacity = style.shadowOpacity
