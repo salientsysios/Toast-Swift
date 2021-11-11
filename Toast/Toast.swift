@@ -427,7 +427,7 @@ public extension UIView {
         wrapperView.layer.cornerRadius = style.cornerRadius
         wrapperView.layer.borderColor = style.borderColor.cgColor
         wrapperView.layer.borderWidth = style.borderWidth
-        wrapperView.accessibilityIdentifier = "toast-view"
+        wrapperView.accessibilityIdentifier = "toast_view"
 
         if style.displayShadow {
             wrapperView.layer.shadowColor = UIColor.black.cgColor
@@ -447,7 +447,7 @@ public extension UIView {
             imageView?.contentMode = .scaleAspectFit
             imageView?.backgroundColor = style.imageBackgroundColor
             imageView?.frame = CGRect(x: style.horizontalPadding, y: style.verticalPadding, width: style.imageSize.width, height: style.imageSize.height)
-            imageView?.accessibilityIdentifier = "image-icon"
+            imageView?.accessibilityIdentifier = "icon_image"
 
             if style.imageShape == .circle {
                 imageView?.makeRounded()
@@ -469,7 +469,7 @@ public extension UIView {
         if let rightIcon = rightIcon {
             let imgView = UIImageView(image: rightIcon)
             imgView.tintColor = .lightGray
-            imgView.accessibilityIdentifier = "image-close"
+            imgView.accessibilityIdentifier = "close_image"
             imgView.frame.size = style.rightImageSize
 
             closeIconSize = imgView.frame.size
@@ -485,7 +485,7 @@ public extension UIView {
             titleLabel?.textColor = style.titleColor
             titleLabel?.backgroundColor = UIColor.clear
             titleLabel?.text = title;
-            titleLabel?.accessibilityIdentifier = "label-title"
+            titleLabel?.accessibilityIdentifier = "title_label"
             
             let maxTitleSize = CGSize(width: (self.bounds.size.width * style.maxWidthPercentage) - imageRect.size.width - closeIconSize.width, height: self.bounds.size.height * style.maxHeightPercentage)
             let titleSize = titleLabel?.sizeThatFits(maxTitleSize)
@@ -503,7 +503,7 @@ public extension UIView {
             messageLabel?.lineBreakMode = .byTruncatingTail;
             messageLabel?.textColor = style.messageColor
             messageLabel?.backgroundColor = UIColor.clear
-            messageLabel?.accessibilityIdentifier = "label-message"
+            messageLabel?.accessibilityIdentifier = "message_label"
             
             let maxMessageSize = CGSize(width: (self.bounds.size.width * style.maxWidthPercentage) - imageRect.size.width - closeIconSize.width, height: self.bounds.size.height * style.maxHeightPercentage)
             let messageSize = messageLabel?.sizeThatFits(maxMessageSize)
@@ -513,7 +513,7 @@ public extension UIView {
                 messageLabel?.frame = CGRect(x: 0.0, y: 0.0, width: actualWidth, height: actualHeight)
             }
         }
-  
+
         var titleRect = CGRect.zero
         
         if let titleLabel = titleLabel {
